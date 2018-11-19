@@ -68,7 +68,7 @@ public class AirHockeyGame extends ApplicationAdapter implements InputProcessor 
 		hitSound = Gdx.audio.newSound(Gdx.files.local("data/hit.wav"));
 		dropSound = Gdx.audio.newSound(Gdx.files.internal("data/drop.wav"));
 
-        background = new Texture("field640.png");
+        background = new Texture("field4v3.png");
 		restart = new Texture("restart.png");
 		restartX = Gdx.graphics.getWidth()/2*0.82f;
 		restartY = Gdx.graphics.getHeight()/2 * 0.77f;
@@ -355,7 +355,7 @@ public class AirHockeyGame extends ApplicationAdapter implements InputProcessor 
 	}
 
 	public void gameOver(String winner) {
-	    resetGame();
+	    resetGame(false);
 		start = 0;
 		if (winner == "player") {
 			WINNER = 1;
@@ -463,15 +463,17 @@ public class AirHockeyGame extends ApplicationAdapter implements InputProcessor 
 		return false;
 	}
 
-	public void resetGame() {
+	public void resetGame(boolean clearScore) {
 		striker.setTransform(200/PIXELS_TO_METERS, 0, 0);
 		striker.setLinearVelocity(0,0);
 		keeper.setTransform(-300/PIXELS_TO_METERS, 0, 0);
 		keeper.setLinearVelocity(0,0);
 		puck.setTransform(100/PIXELS_TO_METERS, 0, 0);
 		puck.setLinearVelocity(0,0);
-		playerScore = 0;
-		rivalScore = 0;
+		if (clearScore) {
+			playerScore = 0;
+			rivalScore = 0;
+		}
 		start = 1;
 		WINNER = 0;
 	}
@@ -504,7 +506,7 @@ public class AirHockeyGame extends ApplicationAdapter implements InputProcessor 
 
 		if (point.x >= restartX && point.x <= restartX+restartW) {
 			if (point.y >= restartY && point.y <= restartY+restartH) {
-				resetGame();
+				resetGame(true);
 			}
 		}
 

@@ -65,7 +65,15 @@ public class AirHockeyGame extends ApplicationAdapter implements InputProcessor 
 
 	final float PIXELS_TO_METERS = 100f;
 
-	// Function: create things when the application is loading
+	// Variables for touch events
+	private Vector2 touchPos = new Vector2();
+	private Vector2 dragPos = new Vector2();
+	private Vector2 movingVector = new Vector2();
+	private boolean isTouched = false;
+
+	/*
+	 * Function: create: to create things when the application is loading
+	 */
 	@Override
 	public void create() {
 		batch = new SpriteBatch();
@@ -190,7 +198,7 @@ public class AirHockeyGame extends ApplicationAdapter implements InputProcessor 
 		debugRenderer = new Box2DDebugRenderer();
 		camera = new OrthographicCamera(Gdx.graphics.getWidth(),Gdx.graphics.getHeight());
 
-		// To detect contact
+		// To detect contact event
 		world.setContactListener(new ContactListener() {
 			// Give a impulse to puck when it is hit
 			@Override
@@ -240,7 +248,10 @@ public class AirHockeyGame extends ApplicationAdapter implements InputProcessor 
 		});
 	}
 
-	/// Function: create Walls
+	/*
+	 * Function: createEdge: to create things when the application is loading
+	 * @params: float startX, startY, endX, endY
+	 */
 	private Body createEdge(float v1x, float v1y, float v2x, float v2y) {
 		BodyDef bodyDefWall = new BodyDef();
 		bodyDefWall.type = BodyDef.BodyType.StaticBody;
@@ -259,7 +270,9 @@ public class AirHockeyGame extends ApplicationAdapter implements InputProcessor 
 	}
 
 
-	// Function: move the keeper by the strategy
+	/*
+	 * Function: keeperMove: to move the keeper by the strategy
+	 */
 	private void keeperMove() {
 		if (keeper != null)
 		{
@@ -289,7 +302,9 @@ public class AirHockeyGame extends ApplicationAdapter implements InputProcessor 
 		}
 	}
 
-	// Function: Check whether is goal
+	/*
+	 * Function: checkGoal: to check whether is goal or not
+	 */
 	private void checkGoal() {
 		if (puck != null) {
 			float puckX = puck.getPosition().x;
@@ -329,7 +344,10 @@ public class AirHockeyGame extends ApplicationAdapter implements InputProcessor 
 		}
 	}
 
-	// function: gameOver to stop the game and show who wins
+	/*
+	 * Function: gameOver: to stop the game and show who wins
+	 * @params String winner
+	 */
 	public void gameOver(String winner) {
 	    resetGame(false);
 		start = 0;
@@ -340,7 +358,10 @@ public class AirHockeyGame extends ApplicationAdapter implements InputProcessor 
 		}
 	}
 
-	// Function: main draw loop
+
+	/*
+	 * Function: render: the main draw loop
+	 */
 	@Override
 	public void render() {
 		camera.update();
@@ -399,7 +420,9 @@ public class AirHockeyGame extends ApplicationAdapter implements InputProcessor 
 		//debugRenderer.render(world, debugMatrix);
 	}
 
-	// Dispose function
+	/*
+	 * Function: dispose: to dispose resources
+	 */
 	@Override
 	public void dispose() {
 		imgPuck.dispose();
@@ -410,7 +433,10 @@ public class AirHockeyGame extends ApplicationAdapter implements InputProcessor 
 		world.dispose();
 	}
 
-	// React with user input
+	/*
+	 * Function: keyDown: to react with user input
+	 * @params int keycode
+	 */
 	@Override
 	public boolean keyDown(int keycode) {
 		if (keycode == Input.Keys.SPACE) // reset strikers
@@ -442,7 +468,10 @@ public class AirHockeyGame extends ApplicationAdapter implements InputProcessor 
 		return false;
 	}
 
-	// Function(clearScore): reset the game
+	/*
+	 * Function: resetGame: to reset the game
+	 * @params boolean clearSocre (clear teh score is needed or not)
+	 */
 	public void resetGame(boolean clearScore) {
 		striker.setTransform(200/PIXELS_TO_METERS, 0, 0);
 		striker.setLinearVelocity(0,0);
@@ -458,7 +487,10 @@ public class AirHockeyGame extends ApplicationAdapter implements InputProcessor 
 		WINNER = 0;
 	}
 
-	// React with touch down event
+	/*
+	 * Function: touchDown: to react with touch down event
+	 * @params int screenX, int screenY, int pointer, int button
+	 */
 	@Override
 	public boolean touchDown(int screenX, int screenY, int pointer, int button) {
 		Vector3 point = camera.unproject(new Vector3(screenX, screenY, 0));
@@ -494,19 +526,20 @@ public class AirHockeyGame extends ApplicationAdapter implements InputProcessor 
 		return true;
 	}
 
-	// When touch up
+	/*
+	 * Function: touchDown: to react with touch up event
+	 * @params int screenX, int screenY, int pointer, int button
+	 */
 	@Override
 	public boolean touchUp(int screenX, int screenY, int pointer, int button) {
 		isTouched = false;
 		return true;
 	}
 
-	private Vector2 touchPos = new Vector2();
-	private Vector2 dragPos = new Vector2();
-	private Vector2 movingVector = new Vector2();
-	private boolean isTouched = false;
-
-	// Drag the striker
+	/*
+	 * Function: touchDown: to react with dragged down event ( to move the position of the striker)
+	 * @params int screenX, int screenY, int pointer
+	 */
 	@Override
 	public boolean touchDragged(int screenX, int screenY, int pointer) {
 		Vector3 point = camera.unproject(new Vector3(screenX, screenY, 0));

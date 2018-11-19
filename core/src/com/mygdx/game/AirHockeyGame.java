@@ -26,9 +26,13 @@ import static java.lang.Math.pow;
 import static java.lang.Math.sqrt;
 import static sun.audio.AudioPlayer.player;
 
+/*
+ * The main class of this game application.
+ */
 public class AirHockeyGame extends ApplicationAdapter implements InputProcessor {
-	static float FPS = 1f/60f;
 
+	// Declare variables
+	static float FPS = 1f/60f;
 	static float PUCK_RADIUS = 15;
 	static float STRIKER_RADIUS = 25;
 	static int MAX_GOALS = 5;
@@ -61,13 +65,16 @@ public class AirHockeyGame extends ApplicationAdapter implements InputProcessor 
 
 	final float PIXELS_TO_METERS = 100f;
 
+	// Function: create things when the application is loading
 	@Override
 	public void create() {
 		batch = new SpriteBatch();
 
+		// Load Sounds
 		hitSound = Gdx.audio.newSound(Gdx.files.local("data/hit.wav"));
 		dropSound = Gdx.audio.newSound(Gdx.files.internal("data/drop.wav"));
 
+		// Load Images
         background = new Texture("field4v3.png");
 		restart = new Texture("restart.png");
 		restartX = Gdx.graphics.getWidth()/2*0.82f;
@@ -93,6 +100,7 @@ public class AirHockeyGame extends ApplicationAdapter implements InputProcessor 
 		float w = Gdx.graphics.getWidth()/PIXELS_TO_METERS;
 		float h = Gdx.graphics.getHeight()/PIXELS_TO_METERS;
 
+		// The position of the goals
 		if (RIVAL_POST1 == null) {
 			float posi_y = h*0.2564f*0.5f + PUCK_RADIUS/PIXELS_TO_METERS-0.2f;
 			float nega_y = posi_y * -1;
@@ -104,6 +112,7 @@ public class AirHockeyGame extends ApplicationAdapter implements InputProcessor 
 			PLAYER_POST2 = new Vector2(posi_x, nega_y);
 		}
 
+		// Set the world
 		world = new World(new Vector2(0f, 0f),false);
 
 		// Sprite Puck's Physics body
@@ -181,7 +190,9 @@ public class AirHockeyGame extends ApplicationAdapter implements InputProcessor 
 		debugRenderer = new Box2DDebugRenderer();
 		camera = new OrthographicCamera(Gdx.graphics.getWidth(),Gdx.graphics.getHeight());
 
+		// To detect contact
 		world.setContactListener(new ContactListener() {
+			// Give a impulse to puck when it is hit
 			@Override
 			public void beginContact(Contact contact) {
 				// Check to see if the collision is between the second sprite and the bottom of the screen
@@ -215,6 +226,7 @@ public class AirHockeyGame extends ApplicationAdapter implements InputProcessor 
 			public void preSolve(Contact contact, Manifold oldManifold) {
 			}
 
+			// Prevent rebounding the striker
 			@Override
 			public void postSolve(Contact contact, ContactImpulse impulse) {
 				if(contact.getFixtureB().getBody() == striker
@@ -228,6 +240,7 @@ public class AirHockeyGame extends ApplicationAdapter implements InputProcessor 
 		});
 	}
 
+	/// Function: create Walls
 	private Body createEdge(float v1x, float v1y, float v2x, float v2y) {
 		BodyDef bodyDefWall = new BodyDef();
 		bodyDefWall.type = BodyDef.BodyType.StaticBody;
@@ -246,6 +259,7 @@ public class AirHockeyGame extends ApplicationAdapter implements InputProcessor 
 	}
 
 
+	// Function: move the keeper by the strategy
 	private void keeperMove() {
 		if (keeper != null)
 		{
@@ -260,61 +274,22 @@ public class AirHockeyGame extends ApplicationAdapter implements InputProcessor 
 			if (start == 1) {
 				keeper.applyForceToCenter(moveX, moveY, true);
 			}
-			// blocking
-			double A1 = RIVAL_POST1.y - ballY;
-			double B1 = ballX - RIVAL_POST1.x;
-			double C1 = -ballX * A1 + ballY*(RIVAL_POST1.x - ballX);
-			double D1 = sqrt(pow(A1, 2) + pow(B1, 2));
-			double A2 = RIVAL_POST2.y - ballY;
-			double B2 = ballX - RIVAL_POST2.x;
-			double C2 = -ballX * A2 + ballY*(RIVAL_POST2.x - ballX);
-			double D2 = sqrt(pow(A2, 2) + pow(B2, 2));
 
-			double ad1 = A1 / D1;
-			double ad2 = A2 / D2;
-			double bd1 = B1 / D1;
-			double bd2 = B2 / D2;
-			double cd1 = C1 / D1;
-			double cd2 = C2 / D2;
-			float k = (float)((ad2-ad1) / (bd2 - bd1));
-			float o = (float)(cd2 - cd1);
-			if (getPedal(ballX, ballY, RIVAL_POST1.x, RIVAL_POST1.y, k) !=
-					getPedal(ballX, ballY, RIVAL_POST2.x, RIVAL_POST2.y, k)) {
-				k = (float)-((ad2+ad1) / (bd2 + bd1));
-				o = (float)-(cd1 + cd2);
-			}
-			Vector2 force = getPedal(ballX, ballY, keeperX, keeperY, k);
 			Gdx.app.setLogLevel(Application.LOG_DEBUG);
 
-			float x = (float)-(Gdx.graphics.getWidth() / PIXELS_TO_METERS * 0.5);
-			float y = x*k+o;
-
+			// Show lines if in the debug mode
 			if (debug == 1) {
 				ShapeRenderer sr = new ShapeRenderer();
 				sr.setColor(Color.BLACK);
 				sr.setProjectionMatrix(camera.combined);
-
 				sr.begin(ShapeRenderer.ShapeType.Filled);
-//				sr.rectLine(ballX * PIXELS_TO_METERS, ballY * PIXELS_TO_METERS, x * PIXELS_TO_METERS, y * PIXELS_TO_METERS, 2);
-//				sr.setColor(Color.BLUE);
-//				sr.rectLine(keeperX * PIXELS_TO_METERS, keeperY * PIXELS_TO_METERS, getPedal(ballX, ballY, keeperX, keeperY, k).x * PIXELS_TO_METERS, getPedal(ballX, ballY, keeperX, keeperY, k).y * PIXELS_TO_METERS, 2);
 				sr.rectLine(keeperX * PIXELS_TO_METERS, keeperY * PIXELS_TO_METERS, moveX * PIXELS_TO_METERS, moveY * PIXELS_TO_METERS, 2);
 				sr.end();
 			}
 		}
 	}
 
-
-	private Vector2 getPedal(float x1, float y1, float x2, float y2, float k) {
-		if (k==0){
-			return new Vector2(x2,0);
-		}
-		Vector2 res = new Vector2();
-		res.x = (y2 - y1 + k * x1 + x2 / k) / (k + 1f /k);
-		res.y = (y1 + k * ( res.x - x1));
-		return res;
-	}
-
+	// Function: Check whether is goal
 	private void checkGoal() {
 		if (puck != null) {
 			float puckX = puck.getPosition().x;
@@ -354,6 +329,7 @@ public class AirHockeyGame extends ApplicationAdapter implements InputProcessor 
 		}
 	}
 
+	// function: gameOver to stop the game and show who wins
 	public void gameOver(String winner) {
 	    resetGame(false);
 		start = 0;
@@ -364,6 +340,7 @@ public class AirHockeyGame extends ApplicationAdapter implements InputProcessor 
 		}
 	}
 
+	// Function: main draw loop
 	@Override
 	public void render() {
 		camera.update();
@@ -422,6 +399,7 @@ public class AirHockeyGame extends ApplicationAdapter implements InputProcessor 
 		//debugRenderer.render(world, debugMatrix);
 	}
 
+	// Dispose function
 	@Override
 	public void dispose() {
 		imgPuck.dispose();
@@ -432,9 +410,10 @@ public class AirHockeyGame extends ApplicationAdapter implements InputProcessor 
 		world.dispose();
 	}
 
+	// React with user input
 	@Override
 	public boolean keyDown(int keycode) {
-		if (keycode == Input.Keys.SPACE)
+		if (keycode == Input.Keys.SPACE) // reset strikers
 		{
 			if (striker != null) {
 				striker.setTransform(200/PIXELS_TO_METERS, 0, 0);
@@ -442,12 +421,12 @@ public class AirHockeyGame extends ApplicationAdapter implements InputProcessor 
 				keeper.setTransform(-300/PIXELS_TO_METERS, 0, 0);
 				keeper.setLinearVelocity(0,0);
 			}
-		} else if (keycode == Input.Keys.R) {
+		} else if (keycode == Input.Keys.R) { // reset puck
 			if (puck != null && keeper != null) {
 				puck.setTransform(100/PIXELS_TO_METERS, 0, 0);
 				puck.setLinearVelocity(0,0);
 			}
-		} else if (keycode == Input.Keys.D) {
+		} else if (keycode == Input.Keys.D) { // set into debug mode (show lines)
 			debug = (debug == 1)? 0 : 1;
 		}
 		return false;
@@ -463,6 +442,7 @@ public class AirHockeyGame extends ApplicationAdapter implements InputProcessor 
 		return false;
 	}
 
+	// Function(clearScore): reset the game
 	public void resetGame(boolean clearScore) {
 		striker.setTransform(200/PIXELS_TO_METERS, 0, 0);
 		striker.setLinearVelocity(0,0);
@@ -478,12 +458,13 @@ public class AirHockeyGame extends ApplicationAdapter implements InputProcessor 
 		WINNER = 0;
 	}
 
+	// React with touch down event
 	@Override
 	public boolean touchDown(int screenX, int screenY, int pointer, int button) {
 		Vector3 point = camera.unproject(new Vector3(screenX, screenY, 0));
 		//Vector3 pnt = new Vector3(Gdx.input.getX(), Gdx.input.getY(), 0);
 		//createCircle(point.x, point.y,random.nextInt(emoticons.size()-1));
-		if (striker != null) {
+		if (striker != null) { // Control the striker
 			for (Fixture fixture : striker.getFixtureList()) {
 				Shape.Type type = fixture.getType();
 				if (type == Shape.Type.Circle) {
@@ -503,7 +484,7 @@ public class AirHockeyGame extends ApplicationAdapter implements InputProcessor 
 				}
 			}
 		}
-
+		// When clicking reset button
 		if (point.x >= restartX && point.x <= restartX+restartW) {
 			if (point.y >= restartY && point.y <= restartY+restartH) {
 				resetGame(true);
@@ -513,6 +494,7 @@ public class AirHockeyGame extends ApplicationAdapter implements InputProcessor 
 		return true;
 	}
 
+	// When touch up
 	@Override
 	public boolean touchUp(int screenX, int screenY, int pointer, int button) {
 		isTouched = false;
@@ -524,6 +506,7 @@ public class AirHockeyGame extends ApplicationAdapter implements InputProcessor 
 	private Vector2 movingVector = new Vector2();
 	private boolean isTouched = false;
 
+	// Drag the striker
 	@Override
 	public boolean touchDragged(int screenX, int screenY, int pointer) {
 		Vector3 point = camera.unproject(new Vector3(screenX, screenY, 0));
